@@ -1177,7 +1177,7 @@ func (r *Repository) Log(o *LogOptions) (object.CommitIter, error) {
 		it = r.logWithLimit(it, limitOptions)
 	}
 
-	if o.Except != nil {
+	if !o.Except.IsZero() {
 		it, err = r.logDifference(it, o.Except, o)
 
 		if err != nil {
@@ -1188,10 +1188,10 @@ func (r *Repository) Log(o *LogOptions) (object.CommitIter, error) {
 	return it, nil
 }
 
-func (r *Repository) logDifference(ci object.CommitIter, except *plumbing.Hash, o *LogOptions) (object.CommitIter, error) {
+func (r *Repository) logDifference(ci object.CommitIter, except plumbing.Hash, o *LogOptions) (object.CommitIter, error) {
 	options := *o
-	options.Except = nil
-	options.From = *except
+	options.Except = plumbing.Hash{}
+	options.From = except
 	exceptLogs, err := r.Log(&options)
 
 	if err != nil {

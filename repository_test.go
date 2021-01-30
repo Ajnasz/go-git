@@ -1301,6 +1301,32 @@ func (s *RepositorySuite) TestLog(c *C) {
 	c.Assert(err, Equals, io.EOF)
 }
 
+func (s *RepositorySuite) TestLogDifferenceFilter(c *C) {
+	r, _ := Init(memory.NewStorage(), nil)
+	err := r.clone(context.Background(), &CloneOptions{
+		URL: s.GetBasicLocalRepositoryURL(),
+	})
+
+	cIter, err := r.Log(&LogOptions{
+		From:   plumbing.NewHash("e8d3ffab552895c19b9fcf7aa264d277cde33881"),
+		Except: plumbing.NewHash("6ecf0ef2c2dffb796033e5a02219af86ec6584e5"),
+	})
+
+	c.Assert(err, IsNil)
+
+	commitOrder := []plumbing.Hash{
+		plumbing.NewHash("e8d3ffab552895c19b9fcf7aa264d277cde33881"),
+	}
+
+	for _, o := range commitOrder {
+		commit, err := cIter.Next()
+		c.Assert(err, IsNil)
+		c.Assert(commit.Hash, Equals, o)
+	}
+	_, err = cIter.Next()
+	c.Assert(err, Equals, io.EOF)
+}
+
 func (s *RepositorySuite) TestLogAll(c *C) {
 	r, _ := Init(memory.NewStorage(), nil)
 	err := r.clone(context.Background(), &CloneOptions{
