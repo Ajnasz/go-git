@@ -1177,7 +1177,36 @@ func (r *Repository) Log(o *LogOptions) (object.CommitIter, error) {
 		it = r.logWithLimit(it, limitOptions)
 	}
 
+	if o.Except != nil {
+		it, err = r.logDifference(it, o.Except, o)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return it, nil
+}
+
+func (r *Repository) logDifference(ci object.CommitIter, except *plumbing.Hash, o *LogOptions) (object.CommitIter, error) {
+	options := *o
+	options.Except = nil
+	options.From = *except
+	exceptLogs, err := r.Log(&options)
+
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[plumbing.Hash]struct{})
+
+	exceptLogs.ForEach(func(c *object.Commit) error {
+		seen[c.Hash] = struct{}{}
+		return nil
+	})
+
+	iter := object.NewCommitDifferenceIterFromIter(seen, ci)
+	return iter, nil
 }
 
 func (r *Repository) log(from plumbing.Hash, commitIterFunc func(*object.Commit) object.CommitIter) (object.CommitIter, error) {

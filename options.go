@@ -356,6 +356,12 @@ type LogOptions struct {
 	// the default From.
 	From plumbing.Hash
 
+	// The log fil contain commits which are can not be found in the commits
+	// which are reachable from the Except hash
+	// This can be used for example to get unmerged commits,
+	// query the logs like `git log dev..master` or `git log dev ^master`
+	Except *plumbing.Hash
+
 	// The default traversal algorithm is Depth-first search
 	// set Order=LogOrderCommitterTime for ordering by committer time (more compatible with `git log`)
 	// set Order=LogOrderBSF for Breadth-first search
